@@ -1,6 +1,6 @@
 from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
 from . import login_manager
@@ -10,9 +10,35 @@ class Role (db.Model):
     __tablename__ = 'roles'
     id = db.Column (db.Integer, primary_key=True)
     name = db.Column (db.String (64), unique=True)
-    default = db.Column(db.Boolean,default=False,index=True)
+    default = db.Column (db.Boolean, default=False, index=True)
     permissions = db.Column (db.Integer)
     users = db.relationship ('User', backref='role', lazy='dynamic')
+
+    @staticmethod
+    def insert_roles():
+        '''
+        0x01|0x02 = 0x03 ==> 0b00000011
+        0x01|0x02|0x04   ==> 0b00000111 (Role.name == 'User')
+        0x01|0x02|0x08   ==> 0b00001111 (Role.name == 'Moderator')
+        0xff             ==> 0b11111111 (Role.name == 'Administrator')
+        '''
+
+        roles = {
+            'User': (Permission.FOLLOW | Permission.COMMENT | Permission.WRITE_ARTICLE, True),
+            'Moderator': (
+                Permission.FOLLOW | Permission.COMMENT | Permission.WRITE_ARTICLE | Permission.MODERATE_COMMENTS
+                , False),
+            'Administrator': (0xff, False)
+        }
+
+        for r in roles.keys ():
+            role = Role.query.filter (Role.name == r).first ()
+            if role is None:
+                role = Role (name=r)
+            role.permissions = roles[r][0]
+            role.default = roles[r][1]
+            db.session.add (role)
+        db.session.commit ()
 
     def __repr__(self):
         return '<Role %r>' % self.name
@@ -26,6 +52,14 @@ class User (db.Model, UserMixin):
     role_id = db.Column (db.Integer, db.ForeignKey ('roles.id'))
     password_hash = db.Column (db.String (128))
     confirmed = db.Column (db.Boolean, default=False)
+
+    def __init__(self, **kwargs):
+        super (User, self).__init__ (**kwargs)
+        if self.role is None:
+            if self.email == current_app.config['ADMIN_EMAIL']:
+                self.role = Role.query.filter (Role.permissions == 0xff).first ()
+            if self.role is None:
+                self.role = Role.query.filter (Role.default == True).first ()
 
     @property
     def password(self):
@@ -54,8 +88,27 @@ class User (db.Model, UserMixin):
         db.session.add (self)
         return True
 
+    def can(self, permissions):
+        return self.role is not None and \
+               (self.role.permissions & permissions) == permissions
+
+    def is_administrator(self):
+        return self.can (Permission.ADMINISTER)
+
     def __repr__(self):
         return '<User % r>' % self.username
+
+
+class AnonymousUser (AnonymousUserMixin):
+    def can(self, permissions):
+        return False
+
+    def is_administrator(self):
+        return False
+
+
+# 将AnonymousUser设置为未登录时current_user的值,程序不再需要检查用户是否登录，就可以自由调用current.user.can()/is_administrator()
+login_manager.anonymous_user = AnonymousUser
 
 
 @login_manager.user_loader
@@ -68,7 +121,8 @@ def load_user(user_id):
     '''
     return User.query.get (int (user_id))
 
-class Permission(object):
+
+class Permission (object):
     '''
     Follow users 0b00000001 (0x01) Follow other users
     Comment on posts made by others 0b00000010 (0x02) Comment on articles written by others

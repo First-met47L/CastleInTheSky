@@ -6,6 +6,7 @@ class Config(object):
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     FLASK_MAIL_SUBJECT_PREFIX = '[CastleInTheSky]'
     FLASK_MAIL_SENDER = 'CastleInTheSky Admin <{mail_username}>'.format(mail_username=os.environ.get("MAIL_USERNAME"))
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
 
     @staticmethod
     def init_app(app):
