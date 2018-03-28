@@ -4,4 +4,7 @@
 #venv
 venv/
 
+#config
+conf*.sh
+
 

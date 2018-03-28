@@ -63,7 +63,7 @@ def submit_page():
         # form.name.data = ''
         return redirect (url_for ('submit_page'))
 
-    return render_template ('submit_page.html', form=form, name=session.get ('name'),known = session.get('known',False))
+    return render_template ('index.html', form=form, name=session.get ('name'), known = session.get('known', False))
 
 
 @app.errorhandler (404)

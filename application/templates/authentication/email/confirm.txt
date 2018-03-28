@@ -1,0 +1,13 @@
+Dear {{ user.username }},
+
+Welcome to Castle In The Sky!
+
+To confirm your account please click on following link:
+
+{{url_for('auth.confirm',token=token,_external=True)}}
+
+Sincerely,
+
+The Team of CastleInTheSky
+
+Note: replies to this email address are not monitored.
