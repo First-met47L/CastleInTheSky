@@ -4,7 +4,8 @@ from flask_login import UserMixin, AnonymousUserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
 from . import login_manager
-
+from datetime import datetime
+import os
 
 class Role (db.Model):
     __tablename__ = 'roles'
@@ -51,7 +52,15 @@ class User (db.Model, UserMixin):
     username = db.Column (db.String (64), unique=True, index=True)
     role_id = db.Column (db.Integer, db.ForeignKey ('roles.id'))
     password_hash = db.Column (db.String (128))
+    avatar = db.Column(db.String(128),default=None)
     confirmed = db.Column (db.Boolean, default=False)
+    realname = db.Column(db.String(64))
+    location = db.Column(db.String(64))
+    validate_code = db.Column(db.String(128),default=None)
+    about_me = db.Column(db.Text()) #db.Text() do not have length's maximum
+    member_since = db.Column(db.DateTime(),default=datetime.utcnow)
+    last_seen = db.Column(db.DateTime(),default=datetime.utcnow) #default argument can accept a function
+
 
     def __init__(self, **kwargs):
         super (User, self).__init__ (**kwargs)
@@ -94,6 +103,11 @@ class User (db.Model, UserMixin):
 
     def is_administrator(self):
         return self.can (Permission.ADMINISTER)
+
+    def ping(self):
+        self.last_seen = datetime.utcnow()
+        db.session.add(self)
+
 
     def __repr__(self):
         return '<User % r>' % self.username

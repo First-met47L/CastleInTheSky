@@ -7,7 +7,7 @@ class Config(object):
     FLASK_MAIL_SUBJECT_PREFIX = '[CastleInTheSky]'
     FLASK_MAIL_SENDER = 'CastleInTheSky Admin <{mail_username}>'.format(mail_username=os.environ.get("MAIL_USERNAME"))
     ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
-
+    AVATAR_STATIC_PATH = 'avatar'
     @staticmethod
     def init_app(app):
         pass

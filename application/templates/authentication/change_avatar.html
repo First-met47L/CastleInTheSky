@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block title %}
+    Castle In The Sky - Change Your Avatar
+{% endblock %}
+
+{% block page_content %}
+    <div class="page-header">
+        Change Your Avatar
+    </div>
+
+    <div class="col-md-8">
+    {{ wtf.quick_form(form) }}
+    </div>
+{% endblock %}
