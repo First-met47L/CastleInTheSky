@@ -17,6 +17,8 @@ def login():
         user = User.query.filter (User.email == form.email.data).first ()
         print (user)
         if user is not None and user.verify_password (form.password.data):
+            #在用户会话中把用户标记为已登录。如果想要实现"Remember me"功能，只需要传递remembeer=True即可。此时：一个cokkie即可保存到用户的电脑上，
+            # 并且，如果userID没有在会话时，Flask-Login将自动从cookie中恢复。并且这个cookie是防修改的，如果用户尝试修改，这个cookie会被服务器丢弃。
             login_user (user, remember=form.remember_me.data)
             return redirect (request.args.get ('next') or url_for ('main.index'))
         flash ('Invalid username or password.')

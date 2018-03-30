@@ -45,6 +45,8 @@ class Role (db.Model):
         return '<Role %r>' % self.name
 
 
+
+
 class User (db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column (db.Integer, primary_key=True)
@@ -60,6 +62,7 @@ class User (db.Model, UserMixin):
     about_me = db.Column(db.Text()) #db.Text() do not have length's maximum
     member_since = db.Column(db.DateTime(),default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(),default=datetime.utcnow) #default argument can accept a function
+    posts = db.relationship('Post',backref='author',lazy='dynamic')
 
 
     def __init__(self, **kwargs):
@@ -123,6 +126,14 @@ class AnonymousUser (AnonymousUserMixin):
 
 # 将AnonymousUser设置为未登录时current_user的值,程序不再需要检查用户是否登录，就可以自由调用current.user.can()/is_administrator()
 login_manager.anonymous_user = AnonymousUser
+
+
+class Post(db.Model):
+    __tablename__ = 'posts'
+    id = db.Column(db.Integer,primary_key=True)
+    body = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime,index=True,default=datetime.utcnow)
+    author_id = db.Column(db.Integer,db.ForeignKey('users.id'))
 
 
 @login_manager.user_loader

@@ -11,8 +11,11 @@ mail = Mail ()
 moment = Moment ()
 db = SQLAlchemy ()
 login_manager = LoginManager ()
+# LoginManager 对象的 session_protection 属性可以设为 None 、 'basic' 或 'strong'
+# 设为 'strong' 时,Flask-Login 会记录客户端 IP地址和浏览器的用户代理信息,如果发现异动就登出用户。
 login_manager.session_protection = 'strong'
-login_manager.login_view = 'auth.login'  # set login page's endpoint
+# set login page's endpoint
+login_manager.login_view = 'auth.login'
 
 
 def create_app(config_name):
@@ -31,7 +34,7 @@ def create_app(config_name):
     from .main import main as main_blueprint
     app.register_blueprint (blueprint=main_blueprint)
     from .auth import auth as  auth_blueprint
-    app.register_blueprint(blueprint=auth_blueprint,url_prefix='/auth')
+    app.register_blueprint (blueprint=auth_blueprint, url_prefix='/auth')
     # app.register_blueprint (blueprint=auth_blueprint, url_prefix='/auth')
 
     return app

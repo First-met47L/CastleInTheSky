@@ -3,30 +3,23 @@ from flask import render_template, session, redirect, url_for,abort,flash
 from flask_login import login_required, current_user
 from ..decorator import admin_required
 from . import main
-from .forms import NameForm,EditProfileForm,EditProfileAdminForm
+from .forms import NameForm,EditProfileForm,EditProfileAdminForm,PostForm
 from .. import db
-from ..models import User,Role
+from ..models import User,Role,Post
 
 
 @main.route ('/index', methods=['GET', 'POST'])
 def index():
-    form = NameForm ()
+    form = PostForm()
     if form.validate_on_submit ():
-        user = User.query.filter (User.username == form.name.data).first ()
-        if user is None:
-            user = User (username=form.name.data)
-            db.session.add (user)
-            db.session.commit ()
-            session['known'] = False
-        else:
-            session['known'] = True
-        session['name'] = form.name.data
-        # form.name.data = ''
-        return redirect (url_for ('.index'))  # abbreviation of main.submit_page
-        # return redirect (url_for ('main.index'))
-
-    return render_template ('index.html', form=form, name=session.get ('name'), known=session.get ('known', False),
-                            )
+        #current_user 是user的轻度包装，获取user对象使用current_user._get_current_object()
+        #author 这种被User.relationship指定的必须用original object
+        post = Post(body=form.body.data,author=current_user._get_current_object())
+        db.session.add(post)
+        flash('article has been posted')
+        return redirect(url_for('main.index'))
+    posts = Post.query.order_by(Post.timestamp.desc()).all()
+    return render_template('index.html',posts=posts,form=form)
 
 
 @main.route('/user/<username>')
@@ -34,7 +27,8 @@ def user(username):
     user = User.query.filter(User.username == username).first()
     if not user:
         abort(404)
-    return render_template('profile/user.html', user=user)
+    posts = user.posts.order_by(Post.timestamp.desc()).all()
+    return render_template('profile/user.html', user=user,posts=posts)
 
 @main.route('/edit-profile',methods=['GET','POST'])
 @login_required

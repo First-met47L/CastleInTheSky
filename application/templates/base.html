@@ -3,6 +3,11 @@
     {{ super() }}
     {{ moment.include_moment() }}
 {% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link href="{{ url_for('static',filename='styles.css') }}" rel="stylesheet">
+{% endblock %}
 {% block head %}
     {{ super() }}
     <link rel="icon" href="{{ url_for('static',filename='favicon.ico') }}" type="image/x-icon">
